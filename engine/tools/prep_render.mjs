@@ -10,6 +10,12 @@ const FULL = path.resolve(String(opt('project'))); const rel = path.relative(REP
 const film = fs.existsSync(path.join(FULL, 'film.json')) ? JSON.parse(fs.readFileSync(path.join(FULL, 'film.json'), 'utf8')) : {};
 const ORDER = opt('chapters') ? String(opt('chapters')).split(',') : (film.chapters || []);
 const tl = JSON.parse(fs.readFileSync(path.join(FULL, 'timeline.json'), 'utf8'));
+// 先确认端口上跑的是本仓库的 serve.mjs（别的程序占着端口时，headless 页面只会等到超时）
+{
+  const u = `http://127.0.0.1:${port}/engine/common/shell-wc.html`;
+  const r = await fetch(u).catch(() => null); const body = r && r.ok ? await r.text() : '';
+  if (!body.includes('paper-explainer')) { console.error(`${u} 不是本仓库的渲染页：先在仓库根目录跑 node engine/tools/serve.mjs ${port}；端口被别的程序占用就换端口并传 --port`); process.exit(1); }
+}
 const br = await chromium.launch({ channel: 'chrome', headless: true });
 let bad = 0;
 for (let i = 0; i < ORDER.length; i++) {

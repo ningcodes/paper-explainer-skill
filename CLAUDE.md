@@ -28,7 +28,7 @@ bash style-cards/editorial/get-fonts.sh
 
 ## 3. 渲染 demo（约 23 秒，一章，无配音）
 ```sh
-node engine/tools/serve.mjs 8771          # 后台跑；端口被占用就换一个，下面的地址跟着换
+node engine/tools/serve.mjs 8771          # 后台跑；端口被占用会直接报错退出，换一个端口（如 8781），下面的地址和 --port 跟着换
 node engine/tools/prep_render.mjs --project examples/demo --port 8771
 ```
 期望 prep_render 打印 `ch01 start 0 end 22.85 need 686 T 22.85 renderFrames 686 cues 10 fontMissing {}`。`fontMissing` 不为空 → 回第 2 步。
@@ -38,9 +38,9 @@ node engine/tools/prep_render.mjs --project examples/demo --port 8771
 http://127.0.0.1:8771/engine/common/shell-wc.html?ch=examples/demo/ch01
 ```
 页面底下显示 `ready T=22.85` 后：
-1. **检测 GPU**：点「1 检测 GPU」，或在控制台 `await probe()`。期望 `webglRenderer` 是真显卡（如 `ANGLE (Apple, ANGLE Metal Renderer: Apple M4, ...)`、NVIDIA、AMD），`prefer-hardware: true`，`software: false`。**是 SwiftShader / llvmpipe 等软件渲染就停下**，告诉用户打开 Chrome 的「使用图形加速」或换一台有 GPU 的电脑。
+1. **检测 GPU**：点「1 检测 GPU」，或在控制台 `await probe()`。期望 `webglRenderer` 是真显卡（如 `ANGLE (Apple, ANGLE Metal Renderer: Apple M4, ...)`、NVIDIA、AMD），`prefer-hardware: true`，`software: false`（判断只看这两项；`prefer-software` 是 true 还是 false 都无所谓）。**是 SwiftShader / llvmpipe 等软件渲染就停下**，告诉用户打开 Chrome 的「使用图形加速」或换一台有 GPU 的电脑。
 2. **测 10 秒**：点「2 测 10 秒」，或 `startRender({ to: 10, download: false })` 后轮询 `window.__prog`，直到 `state === 'done'`，记下 `msPerFrame`（GPU 上一般 5–20 ms/帧）。
-3. **渲染并下载**：同一个标签点「3 渲染并下载」，或 `startRender({ name: 'demo.mp4' })`。等 `__prog.state === 'done'`，浏览器把 `demo.mp4` / `ch01.mp4` 下到下载目录。**一个标签只能下载一次**（Chrome 会静默拦截第二次），渲完关掉这个标签。
+3. **渲染并下载**：同一个标签点「3 渲染并下载」，或 `startRender({ name: 'ch01.mp4' })`（按钮下载的文件名也是 `ch01.mp4`；下载目录里已有同名文件时 Chrome 会改名成 `ch01 (1).mp4`，以最新那个为准）。等 `__prog.state === 'done'`，浏览器把 `ch01.mp4` 下到下载目录。「测 10 秒」不下载，所以和正式渲染可以在同一个标签里做。**一个标签只能下载一次**（Chrome 会静默拦截第二次），渲完关掉这个标签。
 
 没有浏览器自动化工具的 agent → **【人】** 请用户在 Chrome 里打开上面的地址，依次点三个按钮，把页面上显示的结果（GPU 名字、ms/帧）告诉你。
 
@@ -51,7 +51,7 @@ ffprobe -v error -count_frames -select_streams v:0 -show_entries stream=nb_read_
 ```
 期望 `1920,1080,686`（= ceil(22.85 × 30)）。
 
-可选：加上音乐床和音效（需要 uv，约 1–2 分钟）：
+可选：加上音乐床和音效（需要 uv；demo 十几秒，7 分钟的整片约 1–2 分钟）：
 ```sh
 node engine/common/assemble.mjs --project examples/demo
 ```
@@ -88,5 +88,6 @@ mkdir -p ~/.claude/skills && cp -R skill ~/.claude/skills/paper-explainer
 - 页面显示 `ERROR scene.js not found`：`ch=` 路径要相对仓库根目录，且服务是从仓库根目录起的。
 - 中文显示成方块 / 系统字体：字体没下载，或 `fonts=` 参数指错。
 - 第二次点下载没反应：同一标签只能下载一次，开新标签。
+- `prep_render.mjs` 报「不是本仓库的渲染页」：端口上跑的是别的程序，换端口重起 serve.mjs 并传 `--port`。
 - `prep_render.mjs` 报 `browserType.launch: Chromium distribution 'chrome' is not found`：本机没装 Google Chrome。
 - `pdftotext -bbox` 崩溃：用 `examples/demo/get-paper.sh` 里的 PyMuPDF 办法取词框。

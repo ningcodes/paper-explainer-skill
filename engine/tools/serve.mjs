@@ -10,4 +10,7 @@ http.createServer((q, r) => {
   const p = path.join(ROOT, decodeURIComponent(q.url.split('?')[0]));
   if (p !== ROOT && !p.startsWith(ROOT + path.sep)) { r.writeHead(403); return r.end(); }
   fs.readFile(p, (e, b) => { if (e) { r.writeHead(404); return r.end(); } r.writeHead(200, { 'Content-Type': T[path.extname(p).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' }); r.end(b); });
+}).on('error', e => {
+  if (e.code === 'EADDRINUSE') { console.error(`端口 ${port} 已被别的程序占用：换一个端口，例如 node engine/tools/serve.mjs ${port + 10}，后面的地址和 --port 跟着换`); process.exit(1); }
+  throw e;
 }).listen(port, '127.0.0.1', () => console.log(`serving ${ROOT} at http://127.0.0.1:${port}/`));
