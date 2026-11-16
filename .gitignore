@@ -1,0 +1,20 @@
+node_modules/
+.DS_Store
+# 字体由 get-fonts.sh 下载，不提交
+style-cards/editorial/fonts/
+# 渲染产物、配音、成片一律不提交
+**/build/
+**/voice/*.wav
+**/voice/*.mp3
+*.mp4
+*.m4a
+*.wav
+*.mp3
+**/prev.png
+# 自己截的第三方原文图（示例里只提交占位图）
+examples/always-on/source/captured/
+# Always-on 示例的原文图：占位图由 tools/make_placeholders.py 生成，真图由 tools/fetch_sources.mjs 自取，都不提交
+examples/always-on/source/*.png
+examples/always-on/source/*.gif
+examples/always-on/source/g1-tl/
+examples/always-on/source/g3-total/

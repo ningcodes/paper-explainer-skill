@@ -1,0 +1,20 @@
+{
+ "id": "ch06",
+ "timeline": "timeline.json",
+ "clauses": "clauses.json",
+ "sections": [
+  "06"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [],
+ "assets": {
+  "img": {
+   "out": "../source/g3-out@3x.png",
+   "odiag": "../source/700b5f3a446f22493c0307ec65751b6b2f82ccb7.png"
+  },
+  "json": {
+   "reg": "../source/g3-regions.json"
+  }
+ }
+}

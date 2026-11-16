@@ -1,0 +1,16 @@
+{
+  "name": "paper-explainer-skill",
+  "version": "0.1.0",
+  "private": true,
+  "description": "论文讲解视频 skill：口播先锁、render(t) 画布、本机 Chrome WebCodecs 渲染",
+  "type": "module",
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "fonts": "bash style-cards/editorial/get-fonts.sh",
+    "serve": "node engine/tools/serve.mjs 8771"
+  },
+  "dependencies": {
+    "playwright": "1.61.0"
+  }
+}

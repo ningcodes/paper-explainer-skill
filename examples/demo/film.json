@@ -1,0 +1,9 @@
+{
+ "name": "demo",
+ "chapters": ["ch01"],
+ "nav": [
+  { "n": "01", "name": "导读", "sections": ["00"] },
+  { "n": "02", "name": "思路", "sections": ["01"] }
+ ],
+ "numfix": []
+}

@@ -1,0 +1,32 @@
+{
+ "id": "ch07-09",
+ "timeline": "timeline.json",
+ "clauses": "clauses.json",
+ "sections": [
+  "07",
+  "08",
+  "09"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [
+  [
+   "九点",
+   "9点"
+  ],
+  [
+   "第二条",
+   "第2条"
+  ]
+ ],
+ "assets": {
+  "img": {
+   "head": "../source/g3-head@3x.png",
+   "cost": "../source/g3-cost@3x.png",
+   "poll": "../source/g3-poll@3x.png"
+  },
+  "json": {
+   "reg": "../source/g3-regions.json"
+  }
+ }
+}

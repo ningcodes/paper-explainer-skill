@@ -1,0 +1,38 @@
+{
+ "id": "ch02",
+ "timeline": "timeline.json",
+ "clauses": "clauses.json",
+ "sections": [
+  "02"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [
+  [
+   "两个事件",
+   "2个事件"
+  ],
+  [
+   "两次 run",
+   "2次 run"
+  ],
+  [
+   "三件东西",
+   "3件东西"
+  ],
+  [
+   "连发三条",
+   "连发3条"
+  ]
+ ],
+ "assets": {
+  "img": {
+   "inbox": "../source/bb08543a505cea3a24c88c718ceec4405e9c0a79.png",
+   "bp": "../source/g1-bp@3x.png",
+   "fail": "../source/g1-fail@3x.png"
+  },
+  "json": {
+   "reg": "../source/g1-regions.json"
+  }
+ }
+}

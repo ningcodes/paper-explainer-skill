@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><title>paper-explainer · WebCodecs 渲染</title>
+<style>html,body{margin:0;padding:0;background:#FFF1E5}canvas{display:block;width:960px;height:540px}#s{font:14px monospace;padding:6px;white-space:pre-wrap}#ui{padding:6px;font:14px sans-serif}#ui button{font:14px sans-serif;margin-right:8px;padding:4px 10px}</style>
+</head><body><canvas id="c" width="1920" height="1080"></canvas>
+<div id="ui"><button id="bProbe">1 检测 GPU</button><button id="bTest">2 测 10 秒</button><button id="bRender">3 渲染并下载</button> <input id="seek" type="range" min="0" max="1000" value="0" style="width:300px;vertical-align:middle"></div>
+<div id="s">loading…</div>
+<script src="/engine/common/style.js"></script>
+<script src="/engine/common/paper.js"></script>
+<script src="/engine/common/chrome.js"></script>
+<script src="/engine/common/kit.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mp4-muxer@5.1.3/build/mp4-muxer.min.js"></script>
+<script>
+// 本机 Chrome（GPU）逐帧 render(t) → WebCodecs VideoEncoder（avc1.640033，约 20Mbps，prefer-hardware）→ mp4-muxer → <a download>。
+// 用法（路径都相对仓库根目录，由 engine/tools/serve.mjs 提供）：
+//   shell-wc.html?ch=examples/demo/ch01                     章节目录（含 chapter.json、scene.js）
+//   &root=examples/demo                                     可选：工程目录（chapter.json 里的 timeline / assets 路径相对它）；默认 = ch 的上一级
+//   &fonts=style-cards/editorial                            可选：字体目录（其下 fonts/）；默认 style-cards/editorial
+//   &nochrome=1                                             可选：不画进度条、字幕、来源行（导出章节衔接底图用）
+// 控制台：await probe() 报 GPU / 编码器；startRender({ to, name }) 后轮询 window.__prog。
+const q = new URLSearchParams(location.search), ch = (q.get('ch') || '').replace(/^\/+|\/+$/g, '');
+const root = (q.get('root') || ch.split('/').slice(0, -1).join('/')).replace(/^\/+|\/+$/g, '');
+const fonts = (q.get('fonts') || 'style-cards/editorial').replace(/^\/+|\/+$/g, '');
+const s = document.createElement('script'); s.src = `/${ch}/scene.js`;
+s.onload = () => Chrome.boot({ chapterDir: `/${ch}`, root: `/${root}`, fontBase: `/${fonts}` }).then(() => { document.getElementById('s').textContent = 'ready T=' + window.T; }).catch(e => { window.__ERR = String(e && e.stack || e); document.getElementById('s').textContent = 'ERROR ' + window.__ERR; });
+s.onerror = () => { window.__ERR = 'scene.js not found: ' + s.src; document.getElementById('s').textContent = 'ERROR ' + window.__ERR; };
+document.body.appendChild(s);
+const CFG = { codec: 'avc1.640033', width: 1920, height: 1080, bitrate: 20e6, framerate: 30, hardwareAcceleration: 'prefer-hardware', avc: { format: 'avc' } };
+window.probe = async () => {
+  const gl = document.createElement('canvas').getContext('webgl'); const ext = gl && gl.getExtension('WEBGL_debug_renderer_info');
+  const out = { webglRenderer: gl ? gl.getParameter(ext ? ext.UNMASKED_RENDERER_WEBGL : gl.RENDERER) : null, webglVendor: gl && ext ? gl.getParameter(ext.UNMASKED_VENDOR_WEBGL) : null };
+  for (const hw of ['prefer-hardware', 'prefer-software']) { try { out[hw] = (await VideoEncoder.isConfigSupported(Object.assign({}, CFG, { hardwareAcceleration: hw }))).supported; } catch (e) { out[hw] = 'err ' + e.message; } }
+  out.software = /swiftshader|llvmpipe|software/i.test(String(out.webglRenderer));
+  return out;
+};
+window.__prog = null;
+window.startRender = ({ from = 0, to = null, name = 'out.mp4', download = true } = {}) => {
+  const FPS = 30, N = Math.ceil(window.T * FPS), f0 = Math.floor(from * FPS), f1 = to == null ? N : Math.min(N, Math.ceil(to * FPS));
+  const P = window.__prog = { frames: f1 - f0, done: 0, encoded: 0, renderMs: 0, t0: performance.now(), state: 'running' };
+  const muxer = new Mp4Muxer.Muxer({ target: new Mp4Muxer.ArrayBufferTarget(), video: { codec: 'avc', width: 1920, height: 1080, frameRate: FPS }, fastStart: 'in-memory' });
+  const enc = new VideoEncoder({ output: (c, m) => { muxer.addVideoChunk(c, m); P.encoded++; }, error: e => { P.state = 'error ' + e.message; } });
+  enc.configure(CFG);
+  const cv = document.getElementById('c');
+  (async () => {
+    for (let f = f0; f < f1; f++) {
+      const a = performance.now(); window.render(f / FPS); P.renderMs += performance.now() - a;
+      const vf = new VideoFrame(cv, { timestamp: Math.round((f - f0) * 1e6 / FPS), duration: Math.round(1e6 / FPS) });
+      enc.encode(vf, { keyFrame: (f - f0) % 60 === 0 }); vf.close(); P.done++;
+      while (enc.encodeQueueSize > 6) await new Promise(r => setTimeout(r, 2));
+      if (f % 15 === 0) await new Promise(r => setTimeout(r, 0));
+    }
+    await enc.flush(); muxer.finalize();
+    P.totalMs = performance.now() - P.t0; P.msPerFrame = P.totalMs / P.frames; P.renderMsPerFrame = P.renderMs / P.frames;
+    const blob = new Blob([muxer.target.buffer], { type: 'video/mp4' }); P.bytes = blob.size;
+    if (download) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = name; document.body.appendChild(a); a.click(); }
+    P.state = 'done';
+  })().catch(e => { P.state = 'error ' + e.message; });
+  return P.frames;
+};
+// 给人用的按钮（agent 直接调用 probe / startRender 即可）
+const S = document.getElementById('s'), say = x => { S.textContent = typeof x === 'string' ? x : JSON.stringify(x, null, 1); };
+function watch(done) { const iv = setInterval(() => { const P = window.__prog; if (!P) return; say(`${P.state}  ${P.done}/${P.frames} 帧` + (P.msPerFrame ? `  ${P.msPerFrame.toFixed(1)} ms/帧（render ${P.renderMsPerFrame.toFixed(1)}）  ${(P.bytes / 1048576).toFixed(1)}MB` : '')); if (P.state !== 'running') { clearInterval(iv); done && done(P); } }, 300); }
+document.getElementById('bProbe').onclick = async () => { const r = await probe(); say(Object.assign(r, { verdict: r.software ? '软件渲染：停下，别渲（换有 GPU 的机器 / 打开 Chrome 硬件加速）' : 'GPU 正常，可以渲染' })); };
+document.getElementById('bTest').onclick = () => { if (!window.T) return; startRender({ to: Math.min(10, window.T), download: false }); watch(); };
+document.getElementById('bRender').onclick = () => { if (!window.T) return; const name = (ch.split('/').pop() || 'out') + '.mp4'; startRender({ name }); watch(P => say(S.textContent + `\n已下载 ${name}（这个标签不能再下载第二次，渲别的请开新标签）`)); };
+document.getElementById('seek').oninput = e => { if (window.render && window.T) window.render(window.T * e.target.value / 1000); };
+</script>
+</body></html>

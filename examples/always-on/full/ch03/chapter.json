@@ -1,0 +1,33 @@
+{
+ "id": "ch03",
+ "timeline": "timeline.json",
+ "sections": [
+  "03"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [
+  [
+   "早上九点",
+   "早上9点"
+  ],
+  [
+   "九点一过",
+   "9点一过"
+  ],
+  [
+   "明天九点",
+   "明天9点"
+  ]
+ ],
+ "assets": {
+  "img": {
+   "tdiag": "../source/c16694e6d979a2ace84d03da0544297b7245c0a8.png",
+   "tweb": "../source/g2-timers@3x.png"
+  },
+  "json": {
+   "reg": "../source/g2-regions.json"
+  }
+ },
+ "clauses": "clauses.json"
+}

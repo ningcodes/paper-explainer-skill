@@ -1,0 +1,26 @@
+{
+ "id": "ch04",
+ "timeline": "timeline.json",
+ "sections": [
+  "04"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [
+  [
+   "存四类",
+   "存4类"
+  ]
+ ],
+ "assets": {
+  "img": {
+   "mem": "../source/e5d209d7ef9b3455dec8a27b777dc12bdf806699.png",
+   "mweb": "../source/g2-memory@3x.png",
+   "dweb": "../source/g2-dream@3x.png"
+  },
+  "json": {
+   "reg": "../source/g2-regions.json"
+  }
+ },
+ "clauses": "clauses.json"
+}

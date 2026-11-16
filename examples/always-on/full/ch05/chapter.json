@@ -1,0 +1,19 @@
+{
+ "id": "ch05",
+ "timeline": "timeline.json",
+ "clauses": "clauses.json",
+ "sections": [
+  "05"
+ ],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [],
+ "assets": {
+  "img": {
+   "perm": "../source/g3-perm@3x.png"
+  },
+  "json": {
+   "reg": "../source/g3-regions.json"
+  }
+ }
+}

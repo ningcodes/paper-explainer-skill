@@ -1,0 +1,12 @@
+{
+ "id": "ch01",
+ "timeline": "timeline.json",
+ "sections": ["00", "01"],
+ "tail": 0,
+ "flipIn": true,
+ "numfix": [],
+ "assets": {
+  "img": { "page": "paper/react-p1.jpg" },
+  "json": { "words": "paper/react-p1-words.json" }
+ }
+}
